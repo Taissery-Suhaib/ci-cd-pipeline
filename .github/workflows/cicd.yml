@@ -1,0 +1,46 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches:
+      - dev
+      - stage
+      - prod
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run tests
+        run: npm test
+        
+      - name: Build and deploy
+        if: github.ref == 'refs/heads/prod' # Only deploy on 'prod' branch
+        run: |
+          npm run build
+          # Add commands to deploy to production environment
+
+      - name: Send email on failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v2
+        with:
+          server_address: smtp.example.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Build Failed: ${{ github.repository }}"
+          body: "The build failed for branch: ${{ github.ref }} in repository: ${{ github.repository }}. Please check the logs for details."
+          to: your@email.com
+          from: your@email.com
