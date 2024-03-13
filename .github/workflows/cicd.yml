@@ -34,3 +34,18 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ AWS_SECRET_ACCESS_KEY }}
         run: |
           aws s3 sync ./dist s3://your-bucket
+
+      - name: Send Email Notification on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.example.com
+          server_port: 587
+          username: ${{ SMTP_USERNAME }}
+          password: ${{ SMTP_PASSWORD }}
+          subject: Build Failed
+          body: |
+            The build failed for the following commit:
+            Commit SHA: ${{ github.sha }}
+            Commit Message: ${{ github.event.head_commit.message }}
+            Error Message: ${{ job.status }}
